@@ -1,146 +1,190 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const canvas = document.getElementById("space");
-  if (!canvas) return;
 
-  const ctx = canvas.getContext("2d");
-  const mira = document.getElementById("mira");
-  const content = document.querySelector(".content");
+  /* ------------------------------------------------------------------------*/
+  const elementoCanvas = document.getElementById("space");
+  if (!elementoCanvas) return;
 
-  let w, h;
-  const STAR_COUNT = 700;
-  let stars = [];
+  const contextoCanvas = elementoCanvas.getContext("2d");
+  const cursorPersonalizado = document.getElementById("mira");
+  const conteudoPrincipal = document.querySelector(".content");
 
-  function resize() {
-    w = canvas.width = window.innerWidth;
-    h = canvas.height = window.innerHeight;
-    createStars();
+  /* ------------------------------------------------------------------------*/
+  let larguraCanvas, alturaCanvas;
+  const TOTAL_ESTRELAS = 700;
+  let campoEstrelas = [];
+
+  function redimensionarCanvas() {
+    larguraCanvas = elementoCanvas.width = window.innerWidth;
+    alturaCanvas = elementoCanvas.height = window.innerHeight;
+    gerarEstrelas();
   }
 
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", redimensionarCanvas);
 
-  function createStars() {
-    stars = [];
-    for (let i = 0; i < STAR_COUNT; i++) {
-      stars.push({
-        x: Math.random() * w,
-        y: Math.random() * h,
-        z: Math.random(),
-        size: Math.random() * 1.5 + 0.3,
-        alpha: Math.random(),
+  /* ------------------------------------------------------------------------*/
+  function gerarEstrelas() {
+    campoEstrelas = [];
+    for (let i = 0; i < TOTAL_ESTRELAS; i++) {
+      campoEstrelas.push({
+        posicaoX: Math.random() * larguraCanvas,
+        posicaoY: Math.random() * alturaCanvas,
+        profundidade: Math.random(),
+        tamanho: Math.random() * 1.5 + 0.3,
+        opacidade: Math.random(),
       });
     }
   }
 
-  let targetX = window.innerWidth / 2;
-  let targetY = window.innerHeight / 2;
-  let cursorX = targetX;
-  let cursorY = targetY;
-  let parallaxX = 0;
-  let parallaxY = 0;
-  let scrollY = 0;
-  let currentScroll = 0;
+  /* ------------------------------------------------------------------------*/
+  let alvoMouseX = window.innerWidth / 2;
+  let alvoMouseY = window.innerHeight / 2;
 
-  window.addEventListener("mousemove", (e) => {
-    targetX = e.clientX;
-    targetY = e.clientY;
+  let cursorSuavizadoX = alvoMouseX;
+  let cursorSuavizadoY = alvoMouseY;
+
+  let deslocamentoParallaxX = 0;
+  let deslocamentoParallaxY = 0;
+
+  let alvoScrollY = 0;
+  let scrollSuavizadoY = 0;
+
+  /* ------------------------------------------------------------------------*/
+  window.addEventListener("mousemove", (evento) => {
+    alvoMouseX = evento.clientX;
+    alvoMouseY = evento.clientY;
   });
 
   window.addEventListener("scroll", () => {
-    scrollY = window.scrollY;
+    alvoScrollY = window.scrollY;
   });
 
-  document.addEventListener("mousedown", () => mira?.classList.add("click"));
-  document.addEventListener("mouseup", () => mira?.classList.remove("click"));
+  document.addEventListener("mousedown", () => cursorPersonalizado?.classList.add("click"));
+  document.addEventListener("mouseup", () => cursorPersonalizado?.classList.remove("click"));
 
-  function drawNebula() {
-    const grad = ctx.createRadialGradient(w * 0.5, h * 0.5, 0, w * 0.5, h * 0.5, w * 0.9);
-    grad.addColorStop(0, "rgba(122,48,255,0.15)");
-    grad.addColorStop(1, "transparent");
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
+  /* ------------------------------------------------------------------------*/
+  function desenharNebulosa() {
+    const gradienteRadial = contextoCanvas.createRadialGradient(
+      larguraCanvas * 0.5,
+      alturaCanvas * 0.5,
+      0,
+      larguraCanvas * 0.5,
+      alturaCanvas * 0.5,
+      larguraCanvas * 0.9
+    );
+
+    gradienteRadial.addColorStop(0, "rgba(122,48,255,0.15)");
+    gradienteRadial.addColorStop(1, "transparent");
+
+    contextoCanvas.fillStyle = gradienteRadial;
+    contextoCanvas.fillRect(0, 0, larguraCanvas, alturaCanvas);
   }
 
-  function drawStars() {
-    ctx.fillStyle = "white";
-    for (let s of stars) {
-      // Movimento das estrelas com parallax e scroll
-      let x = (s.x + parallaxX * s.z * 60 + w) % w;
-      let y = (s.y + parallaxY * s.z * 60 + currentScroll * s.z * 0.4 + h) % h;
+  /* ------------------------------------------------------------------------*/
+  function desenharEstrelas() {
+    contextoCanvas.fillStyle = "white";
 
-      ctx.globalAlpha = s.alpha;
-      ctx.beginPath();
-      ctx.arc(x, y, s.size, 0, Math.PI * 2);
-      ctx.fill();
+    for (let estrela of campoEstrelas) {
+      let posicaoRenderX =
+        (estrela.posicaoX + deslocamentoParallaxX * estrela.profundidade * 60 + larguraCanvas) % larguraCanvas;
+
+      let posicaoRenderY =
+        (estrela.posicaoY +
+          deslocamentoParallaxY * estrela.profundidade * 60 +
+          scrollSuavizadoY * estrela.profundidade * 0.4 +
+          alturaCanvas) % alturaCanvas;
+
+      contextoCanvas.globalAlpha = estrela.opacidade;
+      contextoCanvas.beginPath();
+      contextoCanvas.arc(posicaoRenderX, posicaoRenderY, estrela.tamanho, 0, Math.PI * 2);
+      contextoCanvas.fill();
     }
-    ctx.globalAlpha = 1;
+
+    contextoCanvas.globalAlpha = 1;
   }
 
-  function animate() {
-    ctx.clearRect(0, 0, w, h);
+  /* ------------------------------------------------------------------------*/
+  function loopAnimacao() {
+    contextoCanvas.clearRect(0, 0, larguraCanvas, alturaCanvas);
 
-    cursorX += (targetX - cursorX) * 0.18;
-    cursorY += (targetY - cursorY) * 0.18;
+    cursorSuavizadoX += (alvoMouseX - cursorSuavizadoX) * 0.18;
+    cursorSuavizadoY += (alvoMouseY - cursorSuavizadoY) * 0.18;
 
-    const nx = targetX / w - 0.5;
-    const ny = targetY / h - 0.5;
-    parallaxX += (nx - parallaxX) * 0.05;
-    parallaxY += (ny - parallaxY) * 0.05;
+    const mouseNormalizadoX = alvoMouseX / larguraCanvas - 0.5;
+    const mouseNormalizadoY = alvoMouseY / alturaCanvas - 0.5;
 
-    currentScroll += (scrollY - currentScroll) * 0.08;
+    deslocamentoParallaxX += (mouseNormalizadoX - deslocamentoParallaxX) * 0.05;
+    deslocamentoParallaxY += (mouseNormalizadoY - deslocamentoParallaxY) * 0.05;
 
-    if (mira) {
-      const scale = mira.classList.contains("click") ? 0.85 : 1;
-      mira.style.transform = `translate3d(${cursorX}px, ${cursorY}px, 0) translate(-50%, -50%) scale(${scale})`;
+    scrollSuavizadoY += (alvoScrollY - scrollSuavizadoY) * 0.08;
+
+    if (cursorPersonalizado) {
+      const escalaCursor = cursorPersonalizado.classList.contains("click") ? 0.85 : 1;
+      cursorPersonalizado.style.transform =
+        `translate3d(${cursorSuavizadoX}px, ${cursorSuavizadoY}px, 0) translate(-50%, -50%) scale(${escalaCursor})`;
     }
 
-    if (content) {
-      content.style.transform = `translate3d(${parallaxX * 10}px, ${parallaxY * 10}px, 0)`;
+    if (conteudoPrincipal) {
+      conteudoPrincipal.style.transform =
+        `translate3d(${deslocamentoParallaxX * 10}px, ${deslocamentoParallaxY * 10}px, 0)`;
     }
 
-    drawNebula();
-    drawStars();
-    requestAnimationFrame(animate);
+    desenharNebulosa();
+    desenharEstrelas();
+
+    requestAnimationFrame(loopAnimacao);
   }
 
-  resize();
-  animate();
+  /* ------------------------------------------------------------------------*/
+  redimensionarCanvas();
+  loopAnimacao();
 
-  // Intersection Observer para efeitos de fade
-  const elements = document.querySelectorAll('.fade-out');
-  elements.forEach(el => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        el.classList.toggle('hidden', !entry.isIntersecting);
+  /* ------------------------------------------------------------------------*/
+  const elementosFade = document.querySelectorAll(".fade-out");
+
+  elementosFade.forEach(elemento => {
+    const observador = new IntersectionObserver((entradas) => {
+      entradas.forEach(entrada => {
+        elemento.classList.toggle("hidden", !entrada.isIntersecting);
       });
-    }, { threshold: 0.2 });
-    observer.observe(el);
+    }, {
+      threshold: 0.2 
+    });
+
+    observador.observe(elemento);
   });
+
 });
 
-// --- FUNÇÕES DOS CARDS (FORA DO DOMCONTENTLOADED PARA O HTML ENXERGAR) ---
+/* ------------------------------------------------------------------------*/
+function mostrarCard(idCard) {
+  const secoesTexto = document.querySelectorAll(".texto");
+  const secaoAlvo = document.getElementById(idCard);
 
-function mostrarCard(id) {
-  const textos = document.querySelectorAll('.texto');
-  const ativo = document.getElementById(id);
+  if (!secaoAlvo) return;
 
-  if (!ativo) return;
+  const jaEstaAberto = secaoAlvo.classList.contains("ativo");
 
-  const jaAberto = ativo.classList.contains('ativo');
+  secoesTexto.forEach(secao => secao.classList.remove("ativo"));
 
-  // Fecha todos
-  textos.forEach(t => t.classList.remove('ativo'));
+  if (!jaEstaAberto) {
+    secaoAlvo.classList.add("ativo");
 
-  // Se não estava aberto, abre e rola a tela
-  if (!jaAberto) {
-    ativo.classList.add('ativo');
     setTimeout(() => {
-      ativo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      secaoAlvo.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+         });
     }, 100);
   }
 }
 
+/* ------------------------------------------------------------------------*/
 function fecharCards() {
-  const textos = document.querySelectorAll('.texto');
-  textos.forEach(t => t.classList.remove('ativo'));
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  const secoesTexto = document.querySelectorAll(".texto");
+  secoesTexto.forEach(secao => secao.classList.remove("ativo"));
+
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+    });
 }
