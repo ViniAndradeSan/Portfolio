@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const contextoCanvas = elementoCanvas.getContext("2d");
   const cursorPersonalizado = document.getElementById("mira");
-  const conteudoPrincipal = document.querySelector(".content");
+  const conteudoPrincipal = document.querySelector(".conteudo");
 
   /* ------------------------------------------------------------------------*/
   let larguraCanvas, alturaCanvas;
@@ -139,7 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loopAnimacao();
 
   /* ------------------------------------------------------------------------*/
-  const elementosFade = document.querySelectorAll(".fade-out");
+  const elementosFade = document.querySelectorAll(".desaparecer");
 
   elementosFade.forEach(elemento => {
     const observador = new IntersectionObserver((entradas) => {
@@ -173,7 +173,7 @@ function mostrarCard(idCard) {
       secaoAlvo.scrollIntoView({
         behavior: "smooth",
         block: "center"
-         });
+      });
     }, 100);
   }
 }
@@ -186,5 +186,5 @@ function fecharCards() {
   window.scrollTo({
     top: 0,
     behavior: "smooth",
-    });
+  });
 }
